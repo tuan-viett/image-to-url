@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual env
+.venv/
+venv/
+env/
+
+# Env
+.env
+.env.local
+.env.*.local
+.env.example
+
+# Storage (uploaded images - never commit)
+api/storage_data/
+worker/storage_data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Build / dist
+dist/
+build/
+*.log
+
+# Node (if added later)
+node_modules/
+package-lock.json
+
+# Local SQL dumps / backups
+*.sql
+!alembic/versions/*.py
+PLAN.md

@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard — ImageURL</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body>
+<header id="appHeader"></header>
+
+<div class="app">
+  <aside class="side">
+    <div class="logo">Image<span>URL</span></div>
+    <div class="nav">
+      <button class="active" data-page="upload">⌂ &nbsp; Upload</button>
+      <button data-page="overview">▦ &nbsp; Overview</button>
+      <button data-page="images">▣ &nbsp; Images</button>
+      <button data-page="keys">⚿ &nbsp; API Keys</button>
+      <button data-page="usage">◔ &nbsp; Usage</button>
+      <button data-page="docs">⌘ &nbsp; Documentation</button>
+    </div>
+    <div class="side-foot">
+      <button id="logout" class="logout-btn">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-title-row">
+      <h1 id="title">Turn images into public URLs.</h1>
+    </div>
+
+    <!-- ============ UPLOAD ============ -->
+    <section id="upload" class="page active">
+      <div class="hero">
+        <h2>Upload. Get a URL. Done.</h2>
+        <p>Upload an image or paste Base64 and get a public URL in seconds.</p>
+        <div class="tabs">
+          <button class="tab active" id="uploadTab">Upload Image</button>
+          <button class="tab" id="base64Tab">Paste Base64</button>
+        </div>
+        <div id="uploadBox" class="drop">
+          <strong>Drop an image here</strong>
+          <span>or click to select a file</span>
+          <small>JPEG, PNG, WebP, GIF · max 10 MB on this plan</small>
+          <input id="file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+        </div>
+        <div id="base64Box" class="b64box">
+          <textarea id="base64" placeholder="data:image/png;base64,..."></textarea>
+          <button class="primary" id="convert">Convert to public URL</button>
+        </div>
+        <div id="result" class="result">
+          <b>Your image is ready.</b>
+          <div class="result-row">
+            <input id="url" readonly>
+            <button class="copy" id="copy">Copy URL</button>
+          </div>
+          <img id="preview" alt="" class="preview">
+        </div>
+        <div id="errorBox" class="error-box" hidden></div>
+      </div>
+    </section>
+
+    <!-- ============ OVERVIEW ============ -->
+    <section id="overview" class="page">
+      <div class="grid-3">
+        <div class="card">
+          <div class="muted">Plan</div>
+          <div class="metric" id="ovPlan">—</div>
+          <div class="muted" id="ovPlanSub">—</div>
+        </div>
+        <div class="card">
+          <div class="muted">Upload credits</div>
+          <div class="metric" id="ovCredits">—</div>
+          <div class="muted">credits remaining</div>
+        </div>
+        <div class="card">
+          <div class="muted">Image retention</div>
+          <div class="metric" id="ovRetention">—</div>
+          <div class="muted">days</div>
+        </div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-header">
+          <b>Recent activity</b>
+          <button class="link" id="ovRefresh">Refresh</button>
+        </div>
+        <div id="ovRecent" class="muted">Loading…</div>
+      </div>
+
+      <div class="card mt-4">
+        <div class="card-header">
+          <b>Available plans</b>
+        </div>
+        <div id="ovPlans" class="plans-grid"></div>
+      </div>
+    </section>
+
+    <!-- ============ IMAGES ============ -->
+    <section id="images" class="page">
+      <div class="card">
+        <div class="card-header">
+          <b>Images</b>
+          <span class="muted" id="imCount">0 images</span>
+        </div>
+        <div class="table">
+          <div class="tr th">
+            <div>Preview</div>
+            <div>Filename</div>
+            <div>Size</div>
+            <div>Format</div>
+            <div>Created</div>
+            <div>Actions</div>
+          </div>
+          <div id="rows"></div>
+        </div>
+        <div class="pagination">
+          <button id="imPrev">← Prev</button>
+          <span id="imPage" class="muted">Page 1</span>
+          <button id="imNext">Next →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ API KEYS ============ -->
+    <section id="keys" class="page">
+      <div class="card">
+        <div class="card-header">
+          <b>API Keys</b>
+          <button class="btn-primary" id="newKey">Create key</button>
+        </div>
+        <div id="keysList"></div>
+      </div>
+
+      <!-- Modal: shown once after creating a key, displays the full secret -->
+      <div id="keyModal" class="modal" hidden>
+        <div class="modal-body">
+          <h3>Save your API key</h3>
+          <p class="muted">This is the only time we'll display the full secret. Copy it now and store it somewhere safe.</p>
+          <div class="key-display">
+            <input id="newSecret" readonly>
+            <button class="copy" id="copySecret">Copy</button>
+          </div>
+          <button class="btn-primary mt-4" id="closeModal">I have saved the key</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ USAGE ============ -->
+    <section id="usage" class="page">
+      <div class="grid-3">
+        <div class="card">
+          <div class="muted">Uploads</div>
+          <div class="metric" id="uUploads">0</div>
+        </div>
+        <div class="card">
+          <div class="muted">API requests</div>
+          <div class="metric" id="uApi">0</div>
+        </div>
+        <div class="card">
+          <div class="muted">Failed uploads</div>
+          <div class="metric" id="uFailed">0</div>
+        </div>
+      </div>
+      <div class="card mt-4">
+        <div class="card-header">
+          <b>Payments</b>
+        </div>
+        <div id="paymentsList" class="muted">No payments yet.</div>
+      </div>
+    </section>
+
+    <!-- ============ DOCUMENTATION ============ -->
+    <section id="docs" class="page">
+      <div class="docs-hero">
+        <h2>API Documentation</h2>
+        <p>Turn images into public URLs. Use your <code>sk_live_...</code> key to authenticate.</p>
+        <div class="docs-base">
+          <span class="muted">Base URL</span>
+          <code id="docsBaseUrl">http://localhost</code>
+          <button class="copy copy-inline" data-copy-target="docsBaseUrl">Copy</button>
+        </div>
+      </div>
+
+      <div class="docs-list">
+
+        <article class="api-card" data-method="POST">
+          <header class="api-head">
+            <span class="method-badge m-post">POST</span>
+            <code class="endpoint">/api/v1/images</code>
+            <span class="auth-badge">JWT or API key</span>
+          </header>
+          <h3>Convert an image (multipart)</h3>
+          <p>Upload a binary file. The <code>file</code> field is required.</p>
+          <h4>cURL</h4>
+          <pre class="code-block"><code data-curl="uploadMultipart">curl -X POST http://localhost/api/v1/images \
+  -H "Authorization: Bearer sk_live_xxxxxxxxx" \
+  -F "file=@/path/to/image.png"</code><button class="copy copy-code" data-copy-code="uploadMultipart">Copy</button></pre>
+          <h4>Response 200</h4>
+          <pre class="code-block"><code>{
+  "success": true,
+  "data": {
+    "id": 42,
+    "url": "http://localhost/i/ab/cd/key.png",
+    "mime_type": "image/png",
+    "size": 12345,
+    "created_at": "2026-09-24T08:00:00"
+  }
+}</code></pre>
+        </article>
+
+        <article class="api-card" data-method="POST">
+          <header class="api-head">
+            <span class="method-badge m-post">POST</span>
+            <code class="endpoint">/api/v1/images</code>
+            <span class="auth-badge">JWT or API key</span>
+          </header>
+          <h3>Convert a Base64 image</h3>
+          <p>Send a JSON body with <code>image</code> set to a raw Base64 string or a <code>data:image/...;base64,...</code> URI.</p>
+          <h4>cURL</h4>
+          <pre class="code-block"><code data-curl="uploadBase64">curl -X POST http://localhost/api/v1/images \
+  -H "Authorization: Bearer sk_live_xxxxxxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{"image": "data:image/png;base64,iVBORw0KGgo..."}'</code><button class="copy copy-code" data-copy-code="uploadBase64">Copy</button></pre>
+          <h4>Response 200</h4>
+          <pre class="code-block"><code>{
+  "success": true,
+  "data": {
+    "id": 43,
+    "url": "http://localhost/i/ab/cd/key.png",
+    "mime_type": "image/png",
+    "size": 69,
+    "created_at": "2026-09-24T08:00:00"
+  }
+}</code></pre>
+        </article>
+
+        <article class="api-card docs-errors">
+          <header class="api-head">
+            <span class="method-badge m-info">INFO</span>
+            <code class="endpoint">Error envelope</code>
+          </header>
+          <h3>Errors</h3>
+          <p>All error responses use this envelope. <code>code</code> is stable for programmatic handling.</p>
+          <pre class="code-block"><code>{
+  "success": false,
+  "error": {
+    "code": "FILE_TOO_LARGE",
+    "message": "Image exceeds the 5 MB limit for this upload.",
+    "details": { "max_bytes": 5242880 }
+  }
+}</code></pre>
+          <h4>Codes</h4>
+          <div class="error-codes">
+            <code>INVALID_BASE64</code><code>INVALID_IMAGE</code><code>UNSUPPORTED_FORMAT</code>
+            <code>FILE_TOO_LARGE</code><code>RATE_LIMITED</code><code>QUOTA_EXCEEDED</code>
+            <code>UNAUTHORIZED</code><code>INVALID_API_KEY</code><code>API_KEY_REVOKED</code>
+            <code>IMAGE_NOT_FOUND</code><code>STORAGE_ERROR</code><code>INTERNAL_ERROR</code>
+          </div>
+        </article>
+
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/components.js"></script>
+<script src="/assets/js/header.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/upload.js"></script>
+<script src="/assets/js/dashboard.js"></script>
+<script src="/assets/js/docs.js"></script>
+</body>
+</html>

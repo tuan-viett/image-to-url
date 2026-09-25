@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ImageURL — Image infrastructure demo</title>
+<style>
+:root{--bg:#f7f8fa;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--primary:#111827;--soft:#f3f4f6;--ok:#087443}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+.app{display:flex;min-height:100vh}.side{width:240px;background:#fff;border-right:1px solid var(--line);padding:24px 16px;position:fixed;height:100vh}
+.logo{font-weight:800;font-size:20px;padding:0 12px 28px}.logo span{color:#6366f1}.nav button{width:100%;border:0;background:none;text-align:left;padding:11px 12px;border-radius:9px;font-size:14px;color:#4b5563;cursor:pointer;margin-bottom:3px}.nav button.active,.nav button:hover{background:#f3f4f6;color:#111827;font-weight:600}
+.main{margin-left:240px;flex:1;padding:34px 42px;max-width:1250px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}.top h1{font-size:28px;margin:0}.user{font-size:13px;color:var(--muted)}
+.page{display:none}.page.active{display:block}
+.hero{background:linear-gradient(135deg,#111827,#292e3a);color:white;border-radius:18px;padding:42px;text-align:center;box-shadow:0 12px 30px #11182718}.hero h2{font-size:34px;margin:0 0 10px}.hero p{color:#cbd5e1;margin:0 0 28px}.tabs{display:flex;gap:8px;justify-content:center;margin-bottom:18px}.tab{background:#ffffff14;color:#cbd5e1;border:1px solid #ffffff22;padding:8px 15px;border-radius:8px;cursor:pointer}.tab.active{background:white;color:#111827}
+.drop{border:1.5px dashed #6b7280;border-radius:14px;padding:42px 20px;background:#ffffff08;cursor:pointer}.drop.drag{border-color:white;background:#ffffff14}.drop strong{display:block;margin-bottom:6px}.drop small{color:#94a3b8}
+textarea{width:100%;height:170px;border:1px solid #374151;background:#0f172a;color:#e5e7eb;border-radius:12px;padding:15px;resize:vertical;font-family:ui-monospace,monospace}.primary{border:0;background:#fff;color:#111827;border-radius:9px;padding:11px 18px;font-weight:700;cursor:pointer;margin-top:12px}.result{display:none;margin-top:18px;background:#fff;color:#111827;border-radius:12px;padding:15px;text-align:left}.result-row{display:flex;gap:8px}.result input{flex:1;border:1px solid var(--line);padding:10px;border-radius:8px;font-family:monospace}.copy{border:0;background:#111827;color:white;border-radius:8px;padding:0 14px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}.metric{font-size:25px;font-weight:800;margin-top:8px}.muted{color:var(--muted);font-size:13px}.table{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}.tr{display:grid;grid-template-columns:64px 1.8fr 100px 90px 130px;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);font-size:13px}.tr:last-child{border-bottom:0}.thumb{width:48px;height:48px;object-fit:cover;border-radius:8px;background:#eef2f7}.badge{display:inline-block;padding:4px 8px;border-radius:99px;background:#ecfdf3;color:var(--ok);font-size:11px;font-weight:700}.key{font-family:monospace;background:#f3f4f6;padding:8px;border-radius:7px}
+@media(max-width:800px){.side{width:68px}.logo{font-size:0}.logo span{font-size:20px}.nav button{font-size:0;text-align:center}.main{margin-left:68px;padding:22px}.grid{grid-template-columns:1fr}.tr{grid-template-columns:52px 1fr 80px}.tr>*:nth-child(n+4){display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="logo">Image<span>URL</span></div>
+  <div class="nav">
+    <button class="active" data-page="upload">⌂ &nbsp; Upload</button>
+    <button data-page="overview">▦ &nbsp; Overview</button>
+    <button data-page="images">▣ &nbsp; Images</button>
+    <button data-page="keys">⚿ &nbsp; API Keys</button>
+    <button data-page="usage">◔ &nbsp; Usage</button>
+    <button data-page="docs">⌘ &nbsp; Documentation</button>
+  </div>
+</aside>
+<main class="main">
+<div class="top"><h1 id="title">Turn images into public URLs.</h1><div class="user">Demo account · Free</div></div>
+
+<section id="upload" class="page active">
+<div class="hero">
+<h2>Upload. Get a URL. Done.</h2><p>Upload an image or paste Base64 and get a public URL in seconds.</p>
+<div class="tabs"><button class="tab active" id="uploadTab">Upload Image</button><button class="tab" id="base64Tab">Paste Base64</button></div>
+<div id="uploadBox" class="drop"><strong>Drop an image here</strong><span>or click to select a file</span><small> · JPEG, PNG, WebP, GIF · max 5 MB</small><input id="file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden></div>
+<div id="base64Box" style="display:none;text-align:left"><textarea id="base64" placeholder="data:image/png;base64,..."></textarea><button class="primary" id="convert">Convert to public URL</button></div>
+<div id="result" class="result"><b>Your image is ready.</b><div class="result-row" style="margin-top:10px"><input id="url" readonly><button class="copy" id="copy">Copy URL</button></div></div>
+</div>
+</section>
+
+<section id="overview" class="page">
+<div class="grid"><div class="card"><div class="muted">Storage</div><div class="metric">128 MB <span class="muted">/ 1 GB</span></div></div><div class="card"><div class="muted">Bandwidth</div><div class="metric">1.8 GB <span class="muted">/ 5 GB</span></div></div><div class="card"><div class="muted">API Requests</div><div class="metric">842 <span class="muted">/ 1,000</span></div></div></div>
+<div class="card" style="margin-top:18px"><b>Recent activity</b><p class="muted">Your latest uploads and API activity will appear here.</p></div>
+</section>
+
+<section id="images" class="page">
+<div class="card"><b>Images</b><span class="muted" style="float:right">3 images</span></div>
+<div class="table">
+<div class="tr" style="font-weight:700;background:#fafafa"><div>Preview</div><div>Filename</div><div>Size</div><div>Format</div><div>Created</div></div>
+<div id="rows"></div></div>
+</section>
+
+<section id="keys" class="page">
+<div class="card"><b>API Keys</b><button class="primary" style="float:right;margin:0;background:#111827;color:#fff" id="newKey">Create key</button><div style="clear:both"></div><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><div class="key">sk_live_•••••••••••• &nbsp; <span class="muted">Created today · Last used 2 min ago</span></div></div>
+</section>
+
+<section id="usage" class="page"><div class="grid"><div class="card"><div class="muted">Uploads</div><div class="metric">38</div></div><div class="card"><div class="muted">API requests</div><div class="metric">842</div></div><div class="card"><div class="muted">Failed requests</div><div class="metric">12</div></div></div></section>
+
+<section id="docs" class="page"><div class="card"><h3>Upload image</h3><pre style="background:#111827;color:#e5e7eb;padding:18px;border-radius:10px;overflow:auto">curl -X POST https://api.example.com/api/v1/images \
+  -H "Authorization: Bearer sk_live_xxx" \
+  -F "file=@image.png"</pre><h3>Base64</h3><pre style="background:#111827;color:#e5e7eb;padding:18px;border-radius:10px;overflow:auto">POST /api/v1/images
+{"image":"data:image/png;base64,..."}</pre></div></section>
+</main></div>
+<script>
+const pages=document.querySelectorAll('.page'), buttons=document.querySelectorAll('.nav button'), title=document.getElementById('title');
+const titles={upload:'Turn images into public URLs.',overview:'Overview',images:'Images',keys:'API Keys',usage:'Usage',docs:'Documentation'};
+buttons.forEach(b=>b.onclick=()=>{buttons.forEach(x=>x.classList.remove('active'));b.classList.add('active');pages.forEach(p=>p.classList.remove('active'));document.getElementById(b.dataset.page).classList.add('active');title.textContent=titles[b.dataset.page]});
+
+const uploadTab=document.getElementById('uploadTab'), base64Tab=document.getElementById('base64Tab'), uploadBox=document.getElementById('uploadBox'), base64Box=document.getElementById('base64Box');
+uploadTab.onclick=()=>{uploadTab.classList.add('active');base64Tab.classList.remove('active');uploadBox.style.display='block';base64Box.style.display='none'};
+base64Tab.onclick=()=>{base64Tab.classList.add('active');uploadTab.classList.remove('active');uploadBox.style.display='none';base64Box.style.display='block'};
+const result=document.getElementById('result'), url=document.getElementById('url'), rows=document.getElementById('rows');
+function showResult(name){const id=Math.random().toString(36).slice(2,10);const u=`https://img.demo.local/${id}/${name.replace(/[^a-z0-9.]/gi,'-')}`;url.value=u;result.style.display='block';rows.innerHTML=`<div class="tr"><img class="thumb" src="${URL.createObjectURL(document.getElementById('file').files[0])}"><div>${name}</div><div>Demo</div><div>IMAGE</div><div><span class="badge">Uploaded</span></div></div>`+rows.innerHTML}
+document.getElementById('drop')?.addEventListener('click',()=>{});
+uploadBox.onclick=e=>{if(e.target.id!=='file')document.getElementById('file').click()};
+document.getElementById('file').onchange=e=>{if(e.target.files[0])showResult(e.target.files[0].name)};
+['dragenter','dragover'].forEach(x=>uploadBox.addEventListener(x,e=>{e.preventDefault();uploadBox.classList.add('drag')}));
+['dragleave','drop'].forEach(x=>uploadBox.addEventListener(x,e=>{e.preventDefault();uploadBox.classList.remove('drag')}));
+uploadBox.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f){document.getElementById('file').files=e.dataTransfer.files;showResult(f.name)}});
+document.getElementById('convert').onclick=()=>{const v=document.getElementById('base64').value.trim();if(!v){alert('Paste Base64 first');return}url.value='https://img.demo.local/'+Math.random().toString(36).slice(2,10)+'.png';result.style.display='block'};
+document.getElementById('copy').onclick=async()=>{await navigator.clipboard.writeText(url.value);document.getElementById('copy').textContent='Copied!';setTimeout(()=>document.getElementById('copy').textContent='Copy URL',1200)};
+document.getElementById('newKey').onclick=()=>alert('Demo: API key created. In production the full secret would be shown only once.');
+</script>
+</body>
+</html>

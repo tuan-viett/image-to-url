@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign up — ImageURL</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body class="auth-body">
+<div class="auth-card">
+  <a class="brand" href="/">Image<span>URL</span></a>
+  <h1>Create your account</h1>
+  <p class="muted">Free plan: 20 uploads, 3-day retention.</p>
+
+  <form id="registerForm" class="auth-form">
+    <label>Name
+      <input type="text" name="name" autocomplete="name" maxlength="120">
+    </label>
+    <label>Email
+      <input type="email" name="email" required autocomplete="email">
+    </label>
+    <label>Password
+      <input type="password" name="password" required autocomplete="new-password" minlength="8" maxlength="128">
+      <small class="muted">Minimum 8 characters.</small>
+    </label>
+    <button type="submit" class="btn-primary w-full">Create account</button>
+    <div id="err" class="err"></div>
+  </form>
+
+  <div class="auth-foot">
+    Already registered? <a href="/login.html">Sign in</a>
+  </div>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>initRegisterPage();</script>
+</body>
+</html>

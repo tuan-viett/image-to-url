@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thanh toán — ImageURL</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body>
+<header id="appHeader"></header>
+
+<div class="pay-shell">
+  <div id="payError" class="pay-error" hidden></div>
+
+  <!-- Step 1: chọn plan -->
+  <section id="payChoose" class="pay-stage active">
+    <div class="pay-stage-head">
+      <h1>Chọn gói để nâng cấp</h1>
+      <p class="muted">Quét QR SePay hoặc chuyển khoản ngân hàng — tài khoản sẽ tự động nâng cấp khi nhận được tiền.</p>
+    </div>
+
+    <div id="plansGrid" class="pay-plans">
+      <div class="muted">Đang tải các gói…</div>
+    </div>
+
+    <a class="pay-back" href="/dashboard.html">← Quay lại Dashboard</a>
+  </section>
+
+  <!-- Step 2: QR + countdown -->
+  <section id="payQr" class="pay-stage">
+    <div class="pay-stage-head">
+      <h1>Quét QR để thanh toán</h1>
+      <p class="muted">
+        Mở app ngân hàng, quét mã QR bên dưới và điền đúng nội dung chuyển khoản.
+      </p>
+    </div>
+
+    <div class="pay-grid">
+      <div class="pay-qr">
+        <div class="qr-frame">
+          <img id="qrImg" alt="SePay QR">
+        </div>
+        <div id="qrCountdown" class="qr-countdown">15:00</div>
+      </div>
+
+      <div class="pay-info">
+        <div class="pay-row">
+          <span class="muted">Ngân hàng</span>
+          <b id="infoBank">—</b>
+        </div>
+        <div class="pay-row">
+          <span class="muted">Số tài khoản</span>
+          <b id="infoAcc">—</b>
+          <button class="copy" data-copy-target="infoAcc">Copy</button>
+        </div>
+        <div class="pay-row">
+          <span class="muted">Chủ tài khoản</span>
+          <b id="infoName">—</b>
+        </div>
+        <div class="pay-row">
+          <span class="muted">Số tiền</span>
+          <b id="infoAmount">—</b>
+          <button class="copy" data-copy-target="infoAmount">Copy</button>
+        </div>
+        <div class="pay-row pay-row-code">
+          <span class="muted">Nội dung CK <em>(bắt buộc)</em></span>
+          <b id="infoCode" class="code-pill">—</b>
+          <button class="copy" data-copy-target="infoCode">Copy</button>
+        </div>
+
+        <div id="payState" class="pay-state pending">
+          <span class="dot"></span>
+          <span id="payStateText">Đang chờ thanh toán…</span>
+        </div>
+
+        <button id="payCancel" class="btn-ghost pay-cancel">Huỷ đơn, chọn gói khác</button>
+      </div>
+    </div>
+
+    <div class="pay-tip">
+      <b>Mẹo:</b> Nội dung CK phải khớp <code>IMGU XXXXXXXX</code> để hệ thống tự nhận diện.
+      QR có hiệu lực trong <span id="tipMinutes">15</span> phút.
+    </div>
+  </section>
+
+  <!-- Step 3: success -->
+  <section id="payDone" class="pay-stage">
+    <div class="pay-success">
+      <div class="pay-success-icon">✓</div>
+      <h1>Thanh toán thành công!</h1>
+      <p class="muted">
+        Tài khoản <b id="doneEmail">—</b> đã được nâng cấp lên <b id="donePlan">—</b>.
+      </p>
+      <div class="pay-success-actions">
+        <a href="/dashboard.html" class="btn-primary">Về Dashboard</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/components.js"></script>
+<script src="/assets/js/header.js"></script>
+<script src="/assets/js/payment.js"></script>
+</body>
+</html>

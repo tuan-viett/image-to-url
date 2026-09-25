@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ImageURL — Free Image Hosting, Convert Base64 to Public URL for AI</title>
+<meta name="description" content="ImageURL là dịch vụ lưu trữ hình ảnh miễn phí. Upload ảnh hoặc dán Base64 để nhận public URL ngay lập tức — tối ưu cho AI workflows, Slack, Notion, CMS. REST API + API keys.">
+<meta name="keywords" content="image hosting, free image upload, base64 to image, image to url, public image url, AI image hosting, REST API image upload, convert base64, image CDN">
+<meta name="author" content="ImageURL">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#111827">
+<meta name="format-detection" content="telephone=no">
+
+<!-- Canonical & hreflang -->
+<link rel="canonical" href="https://img.example.com/">
+<link rel="alternate" hreflang="vi" href="https://img.example.com/">
+<link rel="alternate" hreflang="x-default" href="https://img.example.com/">
+
+<!-- Favicon -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23111827'/%3E%3Ctext x='12' y='17' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='13' fill='%23a5b4fc'%3EI%3C/text%3E%3C/svg%3E">
+
+<!-- Preconnect CDN quan trọng -->
+<link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+
+<!-- Stylesheet -->
+<link rel="stylesheet" href="/assets/css/site.css">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ImageURL">
+<meta property="og:title" content="ImageURL — Free Image Hosting &amp; Base64 to Public URL">
+<meta property="og:description" content="Upload ảnh hoặc dán Base64, nhận public URL trong vài giây. Tối ưu cho AI workflows, Slack, Notion, CMS.">
+<meta property="og:url" content="https://img.example.com/">
+<meta property="og:image" content="https://img.example.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:locale:alternate" content="en_US">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ImageURL — Free Image Hosting &amp; Base64 to Public URL">
+<meta name="twitter:description" content="Upload ảnh hoặc dán Base64, nhận public URL tức thì. REST API + API keys cho developers.">
+<meta name="twitter:image" content="https://img.example.com/og-image.png">
+
+<!-- JSON-LD: SoftwareApplication -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "ImageURL",
+  "alternateName": "ImageURL — Image Hosting & Base64 to URL",
+  "url": "https://img.example.com/",
+  "description": "Free image hosting service with Base64-to-public-URL conversion, REST API, and API keys. Built for developers, AI workflows, and content creators.",
+  "applicationCategory": "DeveloperApplication",
+  "applicationSubCategory": "Image Hosting",
+  "operatingSystem": "Web",
+  "browserRequirements": "Requires JavaScript. Modern browsers supported.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free tier with 20 uploads and 5 MB max file size"
+  },
+  "featureList": [
+    "Anonymous image upload",
+    "Base64 string to public URL conversion",
+    "REST API with API key authentication",
+    "JPEG, PNG, WebP, GIF support",
+    "EXIF metadata stripping",
+    "Auto-expiration of anonymous uploads",
+    "Dashboard for image management",
+    "Usage analytics"
+  ],
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": "1240"
+  },
+  "creator": {
+    "@type": "Organization",
+    "name": "ImageURL",
+    "url": "https://img.example.com/"
+  }
+}
+</script>
+
+<!-- JSON-LD: FAQ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "ImageURL có miễn phí không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Có. Gói Free cho phép 20 lượt upload, file tối đa 5 MB, retention 3 ngày. Đăng ký tài khoản là dùng được ngay, không cần thẻ tín dụng."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Làm sao convert Base64 sang public URL?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Dán chuỗi data:image/png;base64,... vào ô Paste Base64 trên trang chủ, bấm Convert, hệ thống trả về URL HTTPS công khai. Cũng có thể gọi POST /api/v1/images với form-data image=... qua API."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "API có cần API key không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "API cho phép 2 chế độ: JWT token (sau khi login) hoặc API key dạng sk_live_xxxxx. Tạo key trong dashboard tab API Keys, secret chỉ hiện 1 lần duy nhất."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Upload anonymous giữ ảnh bao lâu?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Mặc định 24 giờ cho user anonymous, sau đó file và record tự động bị xoá. User đăng ký có retention theo plan: Free 3 ngày, Basic 10 ngày, Pro 30 ngày."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Có hỗ trợ AI workflows không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Có. Endpoint POST /api/v1/images nhận multipart file hoặc JSON body chứa trường image (data:image/...;base64,...). Phù hợp để nhận Base64 output từ Stable Diffusion, DALL-E, Midjourney rồi chuyển thành URL chia sẻ được."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "File size và format giới hạn thế nào?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Hỗ trợ JPEG, PNG, WebP, GIF. Anonymous tối đa 5 MB / file. User đăng ký tối đa 10 MB / file. EXIF GPS bị strip trước khi lưu để bảo vệ privacy."
+      }
+    }
+  ]
+}
+</script>
+
+<!-- JSON-LD: BreadcrumbList -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://img.example.com/"
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<header id="appHeader"></header>
+
+<!-- ============ HERO ============ -->
+<main>
+<section class="hero" aria-labelledby="hero-title">
+  <h1 id="hero-title">Upload. Get a URL. Done.</h1>
+  <p>Dịch vụ lưu trữ hình ảnh miễn phí — upload ảnh hoặc dán Base64, nhận public URL ngay. Tối ưu cho AI workflows, Slack, Notion, CMS.</p>
+
+  <div class="cta-stack">
+    <p class="cta-note">Upload widget ở trong dashboard sau khi đăng nhập. Trải nghiệm đầy đủ: API key, usage analytics, retention theo plan.</p>
+    <p class="cta-buttons">
+      <a href="/login.html" class="cta-btn primary">Login</a>
+      <a href="/register.html" class="cta-btn ghost">Tạo tài khoản miễn phí</a>
+    </p>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="features" aria-labelledby="features-title">
+  <h2 id="features-title" class="sr-only">Tính năng chính</h2>
+  <article class="feature">
+    <h3>One URL per image</h3>
+    <p>Public HTTPS URL chia sẻ được ở mọi nơi — docs, Slack, Notion, AI workflows, email.</p>
+  </article>
+  <article class="feature">
+    <h3>Base64 friendly</h3>
+    <p>Dán <code>data:image/png;base64,...</code> trực tiếp. Output giống hệt upload thường.</p>
+  </article>
+  <article class="feature">
+    <h3>API first</h3>
+    <p>Drop-in <code>POST /api/v1/images</code> với <code>sk_live_</code> API key. Có sẵn JWT cho browser.</p>
+  </article>
+  <article class="feature">
+    <h3>Auto-expire</h3>
+    <p>Anonymous upload tự dọn sau 24h. User plan Free/Basic/Pro giữ ảnh 3/10/30 ngày.</p>
+  </article>
+</section>
+
+<!-- ============ WHAT IS IMAGEURL (SEO content) ============ -->
+<section class="seo-content" aria-labelledby="what-is-title">
+  <h2 id="what-is-title">ImageURL là gì?</h2>
+  <p>
+    <strong>ImageURL</strong> là dịch vụ <strong>lưu trữ hình ảnh miễn phí</strong> dành cho developer và AI workflows.
+    Thay vì phải tự host file trên server riêng, bạn chỉ cần upload một lần và nhận về một <strong>public URL</strong>
+    ổn định, dùng được trong HTML, Markdown, Notion, Slack, GitHub README, email — bất kỳ đâu cần hiển thị ảnh.
+  </p>
+  <p>
+    Điểm khác biệt lớn nhất là ImageURL hiểu <strong>Base64</strong> ngay từ đầu. Nếu bạn đang chạy pipeline
+    AI tạo ảnh (Stable Diffusion, DALL-E, Midjourney, ComfyUI), output thường là chuỗi
+    <code>data:image/png;base64,...</code> — không có URL. Paste vào ImageURL, bấm Convert, bạn có ngay URL
+    HTTPS để dán vào Slack hay CMS mà không cần code thêm.
+  </p>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="seo-content" aria-labelledby="how-title">
+  <h2 id="how-title">Cách sử dụng ImageURL</h2>
+  <ol class="steps">
+    <li>
+      <strong>Upload file</strong> — kéo thả hoặc chọn ảnh JPEG/PNG/WebP/GIF (tối đa 5 MB cho anonymous,
+      10 MB cho tài khoản đăng ký).
+    </li>
+    <li>
+      <strong>Dán Base64</strong> — copy chuỗi <code>data:image/png;base64,...</code> từ AI tool hoặc
+      clipboard vào ô Paste Base64.
+    </li>
+    <li>
+      <strong>Nhận public URL</strong> — ImageURL trả về HTTPS URL dạng
+      <code>https://img.example.com/i/abc123def.png</code> ngay lập tức. Copy và dùng.
+    </li>
+    <li>
+      <strong>Quản lý qua Dashboard</strong> — đăng ký miễn phí để xem lại ảnh đã upload, xoá, tạo API key,
+      xem usage analytics, mua gói Pro để tăng quota và retention.
+    </li>
+  </ol>
+</section>
+
+<!-- ============ USE CASES ============ -->
+<section class="seo-content" aria-labelledby="usecase-title">
+  <h2 id="usecase-title">Use cases phổ biến</h2>
+  <div class="usecases">
+    <article class="usecase">
+      <h3>AI image workflows</h3>
+      <p>Stable Diffusion, DALL-E, Midjourney, ComfyUI đều xuất Base64. ImageURL biến Base64 thành URL
+      HTTPS để dán vào Slack, Notion, web — không cần tự host file.</p>
+    </article>
+    <article class="usecase">
+      <h3>Markdown &amp; documentation</h3>
+      <p>GitHub README, Notion page, blog cá nhân thường yêu cầu URL public cho ảnh. Upload lên ImageURL,
+      copy URL, paste vào Markdown — ảnh hiển thị ngay.</p>
+    </article>
+    <article class="usecase">
+      <h3>REST API cho ứng dụng</h3>
+      <p>Backend Node.js / Python / Go cần URL ảnh từ user upload? Gọi <code>POST /api/v1/images</code> với
+      API key, response trả về URL public có thể lưu DB.</p>
+    </article>
+    <article class="usecase">
+      <h3>Headless CMS &amp; email</h3>
+      <p>Newsletter HTML cần ảnh hosted ở URL public ổn định (không phải blob local). CMS headless có thể
+      gọi API ImageURL khi author upload ảnh để chuẩn hoá storage.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ============ API QUICK EXAMPLE ============ -->
+<section class="seo-content" aria-labelledby="api-title">
+  <h2 id="api-title">REST API cho developer</h2>
+  <p>ImageURL cung cấp REST API đơn giản, dùng JWT (sau khi login) hoặc API key
+  (<code>sk_live_...</code>) trong header <code>Authorization</code>.</p>
+
+  <h3>Upload file qua multipart</h3>
+  <pre class="code-snippet"><code>curl -X POST https://img.example.com/api/v1/images \
+  -H "Authorization: Bearer sk_live_your_api_key" \
+  -F "file=@/path/to/image.png"
+
+# Response
+{
+  "success": true,
+  "data": {
+    "url": "https://img.example.com/i/abc123def.png",
+    "storage_key": "abc123def",
+    "expires_at": "2026-10-25T10:00:00Z"
+  }
+}</code></pre>
+
+  <h3>Upload Base64 qua JSON body</h3>
+  <pre class="code-snippet"><code>curl -X POST https://img.example.com/api/v1/images \
+  -H "Authorization: Bearer sk_live_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{"image": "data:image/png;base64,iVBORw0KGgo..."}'</code></pre>
+
+  <p>Chi tiết đầy đủ các endpoint (list images, delete, API key management, usage analytics) xem tại
+  <a href="/dashboard.html#documentation">API Documentation</a> trong dashboard.</p>
+</section>
+
+<!-- ============ PRICING / PLANS ============ -->
+<section class="seo-content" aria-labelledby="plans-title">
+  <h2 id="plans-title">Bảng giá</h2>
+  <p>Bắt đầu miễn phí. Nâng cấp khi cần quota lớn hơn hoặc retention dài hơn.</p>
+  <div class="pricing">
+    <article class="price-card">
+      <h3>Free</h3>
+      <p class="price-amt">0 đ</p>
+      <ul>
+        <li>20 lượt upload</li>
+        <li>File tối đa 5 MB</li>
+        <li>Retention 3 ngày</li>
+        <li>API key + dashboard</li>
+      </ul>
+    </article>
+    <article class="price-card">
+      <h3>Basic</h3>
+      <p class="price-amt">100.000 đ</p>
+      <ul>
+        <li>200 lượt upload</li>
+        <li>File tối đa 10 MB</li>
+        <li>Retention 10 ngày</li>
+        <li>Một lần, không subscription</li>
+      </ul>
+    </article>
+    <article class="price-card highlight">
+      <h3>Pro</h3>
+      <p class="price-amt">500.000 đ</p>
+      <ul>
+        <li>1.000 lượt upload</li>
+        <li>File tối đa 10 MB</li>
+        <li>Retention 30 ngày</li>
+        <li>Image quality cao</li>
+      </ul>
+    </article>
+  </div>
+  <p><a href="/payment.html" class="cta-inline">Xem chi tiết và thanh toán →</a></p>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="seo-content" aria-labelledby="faq-title">
+  <h2 id="faq-title">Câu hỏi thường gặp</h2>
+  <details>
+    <summary>ImageURL có miễn phí không?</summary>
+    <p>Có. Gói Free cho 20 lượt upload, file tối đa 5 MB, retention 3 ngày. Đăng ký tài khoản là dùng
+    được ngay, không cần thẻ tín dụng.</p>
+  </details>
+  <details>
+    <summary>Làm sao convert Base64 sang public URL?</summary>
+    <p>Dán chuỗi <code>data:image/png;base64,...</code> vào ô Paste Base64 trên trang chủ, bấm Convert,
+    hệ thống trả về URL HTTPS công khai. Hoặc gọi <code>POST /api/v1/images</code> với
+    <code>{"image": "data:image/png;base64,..."}</code> qua API.</p>
+  </details>
+  <details>
+    <summary>API có cần API key không?</summary>
+    <p>API cho phép 2 chế độ xác thực: JWT token (sau khi login) hoặc API key <code>sk_live_...</code>.
+    Tạo key trong dashboard → tab API Keys. Secret chỉ hiển thị 1 lần duy nhất khi tạo.</p>
+  </details>
+  <details>
+    <summary>Upload anonymous giữ ảnh bao lâu?</summary>
+    <p>Mặc định 24 giờ cho user anonymous (tự động xoá). User đăng ký có retention theo plan: Free 3 ngày,
+    Basic 10 ngày, Pro 30 ngày. Mỗi lần nâng cấp / mua thêm plan sẽ cộng thêm lượt upload.</p>
+  </details>
+  <details>
+    <summary>Có hỗ trợ AI workflows không?</summary>
+    <p>Có. Endpoint <code>POST /api/v1/images</code> nhận multipart file hoặc JSON body chứa trường
+    <code>image</code> (data:image/...;base64,...). Phù hợp để convert Base64 output từ Stable Diffusion,
+    DALL-E, Midjourney, ComfyUI thành URL chia sẻ được.</p>
+  </details>
+  <details>
+    <summary>File size và format giới hạn thế nào?</summary>
+    <p>Hỗ trợ JPEG, PNG, WebP, GIF. Anonymous tối đa 5 MB / file. User đăng ký tối đa 10 MB / file.
+    EXIF GPS bị strip trước khi lưu để bảo vệ privacy. Không hỗ trợ SVG (vì lý do bảo mật).</p>
+  </details>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="cta" aria-labelledby="cta-title">
+  <h2 id="cta-title">Sẵn sàng upload ảnh đầu tiên?</h2>
+  <p>Tạo tài khoản miễn phí để quản lý ảnh, tạo API key và theo dõi usage.</p>
+  <p>
+    <a href="/register.html" class="cta-btn primary">Đăng ký miễn phí</a>
+    <a href="/login.html" class="cta-btn ghost">Đã có tài khoản? Đăng nhập</a>
+  </p>
+</section>
+</main>
+
+<footer class="footer" role="contentinfo">
+  <span>ImageURL — built for developers &amp; AI workflows.</span>
+  <span>
+    <a href="/dashboard.html">Dashboard</a> ·
+    <a href="/login.html">Login</a> ·
+    <a href="/register.html">Sign up</a> ·
+    <a href="/payment.html">Pricing</a>
+  </span>
+</footer>
+
+<!-- Tailwind CDN — load deferred -->
+<script src="https://cdn.tailwindcss.com" defer></script>
+
+<!-- App scripts — defer để không block render -->
+<script src="/assets/js/api.js" defer></script>
+<script src="/assets/js/header.js" defer></script>
+
+<noscript>
+  <style>
+    .hero p, .features, .seo-content, .cta { display: block !important; }
+  </style>
+  <p style="text-align:center;padding:20px;background:#fef3c7;border-radius:8px;margin:20px;">
+    Bạn cần bật JavaScript để dùng dashboard. Tuy nhiên bạn có thể đọc đầy đủ thông tin về ImageURL ở trên.
+  </p>
+</noscript>
+
+</body>
+</html>
