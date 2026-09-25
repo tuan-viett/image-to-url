@@ -56,3 +56,4 @@ class Config(Base):
     KEY_SEPAY_WEBHOOK_SECRET = "sepay.webhook_secret"
     KEY_SEPAY_WEBHOOK_API_KEY = "sepay.api_key"
     KEY_SEPAY_QR_TTL_MINUTES = "sepay.qr_ttl_minutes"
+    KEY_SEPAY_STORE = "sepay.store_name"     # tên cửa hàng hiển thị trên VietQR (optional)

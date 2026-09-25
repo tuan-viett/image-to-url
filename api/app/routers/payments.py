@@ -40,6 +40,7 @@ from app.services.sepay import (
     build_payment_description,
     build_qr_url,
     load_sepay_account,
+    load_vietqr_store,
     slug_code,
 )
 
@@ -110,6 +111,7 @@ def upgrade(
         description=description,
         account_name=acc.account_name,
         template=acc.template,
+        store_name=load_vietqr_store(db),
     )
 
     payment = Payment(

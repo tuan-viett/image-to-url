@@ -132,8 +132,9 @@ def seed_sepay_config() -> None:
         (Config.KEY_SEPAY_BANK, "MBBank", "Mã ngân hàng nhận tiền (theo SePay QR)."),
         (Config.KEY_SEPAY_ACCOUNT, "0000000000", "Số tài khoản nhận tiền — CẦN thay giá trị thật trước khi lên prod."),
         (Config.KEY_SEPAY_ACCOUNT_NAME, "NGUYEN VAN A", "Tên chủ tài khoản nhận tiền."),
-        (Config.KEY_SEPAY_TEMPLATE, "compact", "Template QR SePay: compact | print | qr_only."),
+        (Config.KEY_SEPAY_TEMPLATE, "compact", "Template QR VietQR: compact | print | qr_only."),
         (Config.KEY_SEPAY_QR_TTL_MINUTES, "15", "Thời gian QR hết hạn (phút)."),
+        (Config.KEY_SEPAY_STORE, "", "Tên cửa hàng hiển thị trên VietQR (query param ``store``). Để trống = không gửi."),
         (Config.KEY_SEPAY_WEBHOOK_API_KEY, "", "API key cho header Authorization: Apikey <key>. Để trống = tắt phương thức này."),
         (Config.KEY_SEPAY_WEBHOOK_SECRET, "", "HMAC secret cho header X-SePay-Signature. Để trống = tắt phương thức này."),
     ]

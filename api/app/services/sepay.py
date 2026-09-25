@@ -91,6 +91,15 @@ def load_sepay_account(db: Session) -> SepayAccount:
     )
 
 
+def load_vietqr_store(db: Session) -> str:
+    """Tên cửa hàng hiển thị trên VietQR (query param ``store``).
+
+    Optional. Nếu row ``sepay.store_name`` rỗng → trả về ``""`` và
+    ``build_qr_url`` sẽ bỏ qua param ``store``.
+    """
+    return _read_cfg(db, Config.KEY_SEPAY_STORE, "")
+
+
 def resolve_webhook_secret(db: Session) -> str:
     """Webhook HMAC secret. Đọc thẳng bảng ``configs``.
 
@@ -116,34 +125,49 @@ def build_qr_url(
     description: str,
     account_name: str = "",
     template: str = "compact",
+    store_name: str = "",
 ) -> str:
-    """Render URL ảnh QR SePay.
+    """Render URL ảnh QR VietQR (https://vietqr.app).
 
-    Theo docs https://qr.sepay.vn — endpoint trả về ảnh PNG.
+    Format query theo docs VietQR:
+        ?bank=<BIN/BIC>&acc=<STK>&template=<...>&des=<nội dung>&amount=<...>
+        &showinfo=true|false&holder=<chủ TK>&store=<tên cửa hàng>
+
+    Lưu ý:
+    - ``des`` là tên field của VietQR (khác với SePay dùng ``description``).
+    - Webhook vẫn do SePay xử lý — VietQR chỉ là QR image renderer, không có
+      payment gateway riêng. SePay match theo substring của nội dung CK
+      (đã được set trong ``des``) → đẩy về ``/api/v1/webhooks/sepay``.
     """
-    base = "https://qr.sepay.vn/img"
+    base = "https://vietqr.app/img"
     params = [
         f"bank={quote(bank_code)}",
         f"acc={quote(account_number)}",
-        f"amount={int(amount_vnd)}",
-        f"description={quote(description)}",
         f"template={quote(template)}",
+        f"des={quote(description)}",          # ← field là ``des`` (không phải description)
     ]
+    if amount_vnd > 0:
+        # VietQR optional — bỏ qua nếu amount=0 để cho user tự nhập.
+        params.append(f"amount={int(amount_vnd)}")
+    params.append("showinfo=true")
     if account_name:
-        params.append(f"account_name={quote(account_name)}")
+        params.append(f"holder={quote(account_name)}")
+    if store_name:
+        params.append(f"store={quote(store_name)}")
     return f"{base}?{'&'.join(params)}"
 
 
 def build_payment_description(
     *, code: str, prefix: str = "IMGU", short_code: Optional[str] = None,
 ) -> str:
-    """Tạo nội dung CK mà user phải ghi.
+    """Tạo nội dung CK mà user phải ghi khi CK.
 
-    Format ``<prefix> <code>`` — SePay match theo substring, không cần khớp 100%.
-    Mặc định ``IMGU AB12CD`` (8-char code, dễ đọc).
+    Format dính liền: ``<prefix><code>`` (vd: ``IMGUAB12CD`` — 10 ký tự).
+    KHÔNG dấu cách giữa prefix và code để VietQR QR render đúng và SePay match
+    substring chính xác hơn.
     """
     body = short_code or code
-    return f"{prefix} {body}".strip()
+    return f"{prefix}{body}".strip()
 
 
 def verify_webhook(

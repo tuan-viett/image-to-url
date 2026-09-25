@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from datetime import datetime
 from typing import Any, Optional
 
@@ -65,17 +66,18 @@ router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
 
 def _extract_code(content: str, fallback_code: str) -> Optional[str]:
-    """Lấy phần ``IMGU AB12CD`` từ content ngân hàng.
+    """Lấy phần ``IMGUAB12CD`` từ content ngân hàng.
 
-    SePay đôi khi trả về ``content`` có thêm tiếng Việt đính kèm hoặc ký tự lạ.
-    Tìm cụm ``IMGU XXXX`` đầu tiên; nếu không thấy thì dùng ``code`` field.
+    SePay đôi khi trả về ``content`` có thêm tiếng Việt đính kèm hoặc ký tự lạ
+    (vd: ``"chuyen tien IMGUAB12CD cho anh"``). Tìm cụm ``IMGU`` + 8 ký tự
+    alphanumeric đứng liền nhau; nếu không thấy thì dùng ``code`` field.
+    Mã dính liền (không dấu cách giữa prefix và code) theo format hiện tại.
     """
     if not content:
         return None
-    parts = content.strip().split()
-    for i, p in enumerate(parts):
-        if p.upper().startswith("IMGU") and i + 1 < len(parts):
-            return f"{parts[i].upper()} {parts[i+1].upper()}"
+    m = re.search(r"IMGU[A-Z0-9]{4,16}", content.upper())
+    if m:
+        return m.group(0)
     return fallback_code.strip().upper() if fallback_code else None
 
 
