@@ -21,30 +21,36 @@ def consume_credit(
     user_id: int,
     reference_type: Optional[str] = None,
     reference_id: Optional[int] = None,
+    amount: int = 1,
+    type_: int = UploadCreditTransaction.TYPE_UPLOAD,
 ) -> int:
-    """Atomically decrement user's upload credits by 1.
+    """Atomically decrement user's upload credits.
 
-    Returns the new balance_after. Raises QUOTA_EXCEEDED if the balance is 0.
-    Must be called inside the same transaction that creates the Image row.
+    ``amount`` mặc định 1 (cho upload thường). AI generation truyền ``amount=5``
+    và ``type_=TYPE_AI_GENERATION``. Returns the new balance_after. Raises
+    QUOTA_EXCEEDED nếu balance < amount. Phải gọi trong transaction đã có
+    Image row (reference_id).
     """
+    if amount <= 0:
+        raise ValueError("consume_credit requires amount > 0")
     user = db.execute(
         select(User).where(User.id == user_id).with_for_update()
     ).scalar_one_or_none()
     if not user:
         raise AppError(ErrorCode.UNAUTHORIZED, "User not found")
-    if user.upload_credits <= 0:
+    if user.upload_credits < amount:
         raise AppError(
             ErrorCode.QUOTA_EXCEEDED,
-            "No upload credits remaining. Please top up or upgrade your plan.",
-            details={"upload_credits": 0},
+            f"Insufficient credits: need {amount}, have {user.upload_credits}",
+            details={"required": amount, "available": user.upload_credits},
         )
 
-    user.upload_credits -= 1
+    user.upload_credits -= amount
     db.add(
         UploadCreditTransaction(
             user_id=user_id,
-            type=UploadCreditTransaction.TYPE_UPLOAD,
-            amount=-1,
+            type=type_,
+            amount=-amount,
             balance_after=user.upload_credits,
             reference_type=reference_type,
             reference_id=reference_id,

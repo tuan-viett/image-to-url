@@ -42,6 +42,7 @@ class UsageEvent(Base):
     TYPE_DELETE = 3
     TYPE_FAILED_UPLOAD = 4
     TYPE_IMAGE_EXPIRED = 5
+    TYPE_AI_GENERATION = 6
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     user_id: Mapped[Optional[int]] = mapped_column(
@@ -54,7 +55,7 @@ class UsageEvent(Base):
     )
     event_type: Mapped[int] = mapped_column(
         SmallInteger, nullable=False,
-        comment="Loại sự kiện. 1=upload, 2=api_request, 3=delete, 4=failed_upload, 5=image_expired.",
+        comment="Loại sự kiện. 1=upload, 2=api_request, 3=delete, 4=failed_upload, 5=image_expired, 6=ai_generation.",
     )
     bytes: Mapped[int] = mapped_column(
         BigInteger, nullable=False, default=0, server_default="0",

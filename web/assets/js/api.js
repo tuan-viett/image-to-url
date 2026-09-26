@@ -182,6 +182,17 @@ window.ImageURL = (function () {
     return request("/api/v1/payments");
   }
 
+  async function aiGenerate({ prompt, size, quality, output_format }) {
+    return request("/api/v1/ai/generations", {
+      method: "POST",
+      body: { prompt, size, quality, output_format },
+    });
+  }
+
+  async function getAIStatus() {
+    return request("/api/v1/ai/status", { skipAuth: true });
+  }
+
   return {
     getToken, setToken, getUser, setUser, logout, request,
     anonymousUpload, anonymousUploadBase64,
@@ -190,5 +201,6 @@ window.ImageURL = (function () {
     listApiKeys, createApiKey, revokeApiKey,
     getUsage, listPlans, upgradePlan, topupCredits, listPayments,
     getSepayConfig, getPaymentStatus,
+    aiGenerate, getAIStatus,
   };
 })();

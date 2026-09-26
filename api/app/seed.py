@@ -112,6 +112,7 @@ def main() -> None:
     plan_ids = seed_plans()
     demo_user_id = seed_demo_user(plan_ids["Free"])
     seed_sepay_config()
+    seed_ai_image_config()
     log.info(
         "seed complete. plans=%s demo_user_id=%s",
         {n: i for n, i in plan_ids.items()},
@@ -137,6 +138,54 @@ def seed_sepay_config() -> None:
         (Config.KEY_SEPAY_STORE, "", "Tên cửa hàng hiển thị trên VietQR (query param ``store``). Để trống = không gửi."),
         (Config.KEY_SEPAY_WEBHOOK_API_KEY, "", "API key cho header Authorization: Apikey <key>. Để trống = tắt phương thức này."),
         (Config.KEY_SEPAY_WEBHOOK_SECRET, "", "HMAC secret cho header X-SePay-Signature. Để trống = tắt phương thức này."),
+    ]
+    with session_scope() as db:
+        for key, value, desc in defaults:
+            existing = db.get(Config, key)
+            if existing:
+                continue
+            db.add(Config(config_key=key, config_value=value, description=desc))
+            log.info("seeded config %s = %r", key, value)
+
+
+def seed_ai_image_config() -> None:
+    """Insert placeholder AI image provider settings vào ``configs`` nếu chưa có.
+
+    Cùng pattern với SePay — single source of truth, đổi runtime không cần rebuild.
+    Nếu thiếu ``ai_image.api_key`` thì endpoint ``POST /ai/generations`` sẽ
+    fail với ``AI_PROVIDER_ERROR``. Production cần UPDATE row này với key thật.
+    """
+    defaults = [
+        (
+            Config.KEY_AI_IMAGE_API_URL,
+            "https://router.auto-socials.com/v1/images/generations",
+            "Endpoint URL của AI image provider (OpenAI-compatible).",
+        ),
+        (
+            Config.KEY_AI_IMAGE_API_KEY,
+            "sk-1ee8d0b7a0052214-vfveb6-81caf92a",
+            "Bearer token cho AI image provider. CẦN thay giá trị thật trước khi lên prod.",
+        ),
+        (
+            Config.KEY_AI_IMAGE_DEFAULT_MODEL,
+            "ag/gemini-3.1-flash-image",
+            "Tên model mặc định nếu client không truyền ``model``.",
+        ),
+        (
+            Config.KEY_AI_IMAGE_CREDIT_COST,
+            "5",
+            "Số credit tiêu hao cho 1 ảnh AI gen. Mặc định 5.",
+        ),
+        (
+            Config.KEY_AI_IMAGE_TIMEOUT_SECONDS,
+            "60",
+            "Timeout HTTP call sang provider (giây). Mặc định 60, tối đa 300.",
+        ),
+        (
+            Config.KEY_AI_IMAGE_ENABLED,
+            "true",
+            "Bật/tắt tính năng AI generate. 'true' = bật, 'false' = tắt (503 AI_DISABLED).",
+        ),
     ]
     with session_scope() as db:
         for key, value, desc in defaults:

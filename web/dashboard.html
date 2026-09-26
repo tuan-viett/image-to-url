@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="/assets/images.png">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dashboard — ImageURL</title>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -17,6 +18,7 @@
       <button class="active" data-page="upload">⌂ &nbsp; Upload</button>
       <button data-page="overview">▦ &nbsp; Overview</button>
       <button data-page="images">▣ &nbsp; Images</button>
+      <button data-page="aigen">✨ &nbsp; AI Generate</button>
       <button data-page="keys">⚿ &nbsp; API Keys</button>
       <button data-page="usage">◔ &nbsp; Usage</button>
       <button data-page="docs">⌘ &nbsp; Documentation</button>
@@ -124,6 +126,71 @@
       </div>
     </section>
 
+    <!-- ============ AI GENERATE ============ -->
+    <section id="aigen" class="page">
+      <div class="hero">
+        <h2>Generate with AI</h2>
+        <p>Nhập prompt bằng tiếng Anh (hoặc bất kỳ ngôn ngữ nào provider hỗ trợ) — AI sẽ tạo ảnh và trả về public URL đúng format với Upload thường.</p>
+        <div id="aigenDisabledBanner" class="err" hidden>⚠️ AI image generation is <b>currently disabled</b> by the operator.</div>
+        <form id="aigenForm" class="aigen-form">
+          <label class="aigen-field">
+            <span>Prompt</span>
+            <textarea id="aigenPrompt" name="prompt" required minlength="1" maxlength="2000"
+                      placeholder="A cute cat wearing a red hat, sitting on a wooden table, soft lighting, studio photo"></textarea>
+          </label>
+          <div class="aigen-row">
+            <label class="aigen-field">
+              <span>Size (optional)</span>
+              <select id="aigenSize" name="size">
+                <option value="">auto</option>
+                <option value="1024x1024">1024×1024</option>
+                <option value="1024x1536">1024×1536</option>
+                <option value="1536x1024">1536×1024</option>
+              </select>
+            </label>
+            <label class="aigen-field">
+              <span>Quality (optional)</span>
+              <select id="aigenQuality" name="quality">
+                <option value="">auto</option>
+                <option value="low">low</option>
+                <option value="medium">medium</option>
+                <option value="high">high</option>
+              </select>
+            </label>
+            <label class="aigen-field">
+              <span>Output format</span>
+              <select id="aigenFormat" name="output_format">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WebP</option>
+              </select>
+            </label>
+          </div>
+          <div class="aigen-actions">
+            <button type="submit" class="btn-primary" id="aigenSubmit">✨ &nbsp;Generate</button>
+            <span class="muted aigen-cost" id="aigenCost">Cost: 5 credits / image</span>
+          </div>
+          <div id="aigenErr" class="err"></div>
+        </form>
+      </div>
+      <div id="aigenResult" class="aigen-result" hidden>
+        <div class="aigen-result-card">
+          <div class="aigen-result-head">
+            <b>Your AI image is ready.</b>
+            <span class="muted" id="aigenMeta"></span>
+          </div>
+          <img id="aigenImg" alt="" class="preview">
+          <div class="result-row">
+            <input id="aigenUrl" readonly>
+            <button class="copy" id="aigenCopy">Copy URL</button>
+          </div>
+          <div class="muted aigen-credit-row">
+            Credits remaining: <span id="aigenCreditsRem">—</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ API KEYS ============ -->
     <section id="keys" class="page">
       <div class="card">
@@ -156,12 +223,26 @@
           <div class="metric" id="uUploads">0</div>
         </div>
         <div class="card">
+          <div class="muted">AI generations</div>
+          <div class="metric" id="uAiGen">0</div>
+        </div>
+        <div class="card">
           <div class="muted">API requests</div>
           <div class="metric" id="uApi">0</div>
         </div>
+      </div>
+      <div class="grid-3 mt-4">
         <div class="card">
           <div class="muted">Failed uploads</div>
           <div class="metric" id="uFailed">0</div>
+        </div>
+        <div class="card">
+          <div class="muted">Deletes</div>
+          <div class="metric" id="uDeletes">0</div>
+        </div>
+        <div class="card">
+          <div class="muted">Credits remaining</div>
+          <div class="metric" id="uCredits">—</div>
         </div>
       </div>
       <div class="card mt-4">
@@ -237,6 +318,61 @@
 }</code></pre>
         </article>
 
+        <article class="api-card" data-method="POST">
+          <header class="api-head">
+            <span class="method-badge m-post">POST</span>
+            <code class="endpoint">/api/v1/ai/generations</code>
+            <span class="auth-badge">JWT or API key</span>
+            <span class="auth-badge">−5 credits</span>
+          </header>
+          <h3>Generate an image from a prompt (AI)</h3>
+          <p>Send a text prompt to the AI provider. Returns a public URL on success. Costs <b>5 credits</b> per request. Rate-limited to <b>10 requests / 10 min / IP</b>. Anonymous (no auth) is rejected with <code>401 UNAUTHORIZED</code>.</p>
+          <h4>Allowed fields</h4>
+          <p>Only these four fields are accepted. Anything else (e.g. <code>model</code>, <code>n</code>, <code>background</code>, <code>image_detail</code>) returns <code>422 VALIDATION_ERROR</code> — those are server-controlled and always read from the <code>configs</code> table.</p>
+          <ul>
+            <li><code>prompt</code> — <b>required</b>, 1–2000 chars.</li>
+            <li><code>size</code> — optional. One of <code>1024x1024</code>, <code>1024x1536</code>, <code>1536x1024</code>, <code>auto</code>.</li>
+            <li><code>quality</code> — optional. One of <code>low</code>, <code>medium</code>, <code>high</code>.</li>
+            <li><code>output_format</code> — optional, default <code>png</code>. One of <code>png</code>, <code>jpeg</code>, <code>webp</code>. The stored file <b>always</b> has the matching extension (<code>.png</code>, <code>.jpg</code>, <code>.webp</code>) — bytes are re-encoded to match.</li>
+          </ul>
+          <h4>cURL</h4>
+          <pre class="code-block"><code data-curl="aiGen">curl -X POST http://localhost/api/v1/ai/generations \
+  -H "Authorization: Bearer sk_live_xxxxxxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "A cute cat wearing a tiny astronaut helmet, watercolor style",
+    "size": "1024x1024",
+    "quality": "high",
+    "output_format": "png"
+  }'</code><button class="copy copy-code" data-copy-code="aiGen">Copy</button></pre>
+          <h4>Response 200</h4>
+          <pre class="code-block"><code>{
+  "success": true,
+  "data": {
+    "id": 4242,
+    "url": "http://localhost/i/ab/cd/key.png",
+    "storage_key": "key",
+    "mime_type": "image/png",
+    "size": 184320,
+    "created_at": "2026-09-26T03:14:15",
+    "expires_at": "2026-10-26T03:14:15",
+    "credits_remaining": 95
+  }
+}</code></pre>
+          <h4>Server-controlled (not accepted from client)</h4>
+          <ul>
+            <li><code>model</code> — default <code>ag/gemini-3.1-flash-image</code> (configurable via <code>ai_image.default_model</code>).</li>
+            <li><code>n</code> — fixed at <code>1</code>. One request = one image.</li>
+            <li><code>background</code> / <code>image_detail</code> — fixed to provider defaults.</li>
+          </ul>
+          <h4>Notes</h4>
+          <ul>
+            <li>On provider error / timeout / content-policy block, the credit is refunded automatically.</li>
+            <li>Generated images are stored with <code>images.source = 5 (ai_generated)</code> and counted in the <b>AI generations</b> tile of the Usage tab.</li>
+            <li>Endpoint runs on the same auth + storage pipeline as <code>POST /api/v1/images</code>.</li>
+          </ul>
+        </article>
+
         <article class="api-card docs-errors">
           <header class="api-head">
             <span class="method-badge m-info">INFO</span>
@@ -258,6 +394,7 @@
             <code>FILE_TOO_LARGE</code><code>RATE_LIMITED</code><code>QUOTA_EXCEEDED</code>
             <code>UNAUTHORIZED</code><code>INVALID_API_KEY</code><code>API_KEY_REVOKED</code>
             <code>IMAGE_NOT_FOUND</code><code>STORAGE_ERROR</code><code>INTERNAL_ERROR</code>
+            <code>AI_PROVIDER_ERROR</code><code>AI_CONTENT_BLOCKED</code><code>AI_TIMEOUT</code>
           </div>
         </article>
 
@@ -271,6 +408,7 @@
 <script src="/assets/js/header.js"></script>
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/upload.js"></script>
+<script src="/assets/js/ai_gen.js"></script>
 <script src="/assets/js/dashboard.js"></script>
 <script src="/assets/js/docs.js"></script>
 </body>

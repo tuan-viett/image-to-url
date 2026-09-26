@@ -213,4 +213,79 @@ DELTA=$((CREDITS_AFTER - CREDITS_BEFORE))
 [ "$DELTA" -gt 0 ] && ok "renewal granted +$DELTA credits ($CREDITS_BEFORE → $CREDITS_AFTER)" \
                   || fail "renewal did NOT grant credits ($CREDITS_BEFORE → $CREDITS_AFTER)"
 
+# ====== AI Image Generation ======
+say "24. AI gen: unauthenticated request → 401"
+NO_AUTH=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/v1/ai/generations" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"A cute cat","output_format":"png"}')
+[ "$NO_AUTH" = "401" ] && ok "anon → 401" || fail "expected 401 got $NO_AUTH"
+
+say "25. AI gen: empty prompt → 422 validation error"
+EMPTY_PROMPT_HTTP=$(curl -s -o /tmp/_empty.json -w "%{http_code}" -X POST "$BASE/api/v1/ai/generations" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"prompt":"","output_format":"png"}')
+[ "$EMPTY_PROMPT_HTTP" = "422" ] && ok "empty prompt → 422" || fail "expected 422 got $EMPTY_PROMPT_HTTP: $(cat /tmp/_empty.json)"
+
+say "25b. AI gen: forbidden field (model/n) → 422"
+FORBID_HTTP=$(curl -s -o /tmp/_forbid.json -w "%{http_code}" -X POST "$BASE/api/v1/ai/generations" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"prompt":"x","model":"bad","n":2,"output_format":"png"}')
+[ "$FORBID_HTTP" = "422" ] && ok "forbidden field → 422" || fail "expected 422 got $FORBID_HTTP: $(cat /tmp/_forbid.json)"
+grep -q "model" /tmp/_forbid.json && ok "422 names forbidden field (model)" || fail "422 body should mention 'model': $(cat /tmp/_forbid.json)"
+
+say "26. AI gen: end-to-end (prompt → URL + credit decrement)"
+# Capture credit balance before
+CREDITS_BEFORE=$(curl -s -H "Authorization: Bearer $TOKEN" "$BASE/api/v1/auth/me" \
+  | python3 -c "import json,sys;print(json.load(sys.stdin)['data']['upload_credits'])")
+GEN_RESP=$(curl -s -X POST "$BASE/api/v1/ai/generations" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"prompt":"A tiny red circle on white background, simple geometry test image","output_format":"png"}')
+GEN_URL=$(echo "$GEN_RESP" | python3 -c "import json,sys;d=json.load(sys.stdin);print((d.get('data') or {}).get('url',''))" 2>/dev/null || echo "")
+if [ -z "$GEN_URL" ]; then
+  # AI provider không khả dụng hoặc key sai — chấp nhận error có code đúng
+  CODE=$(echo "$GEN_RESP" | python3 -c "import json,sys;d=json.load(sys.stdin);print((d.get('error') or {}).get('code',''))" 2>/dev/null || echo "")
+  if [ "$CODE" = "AI_PROVIDER_ERROR" ] || [ "$CODE" = "AI_TIMEOUT" ] || [ "$CODE" = "QUOTA_EXCEEDED" ]; then
+    ok "provider unavailable (code=$CODE) — endpoint wired correctly"
+  else
+    fail "unexpected AI gen response: $GEN_RESP"
+  fi
+else
+  # Success path: URL accessible + credit giảm
+  PATH_=$(echo "$GEN_URL" | sed "s|^$BASE||")
+  HEAD=$(curl -sI "$BASE$PATH_" | head -1)
+  echo "$HEAD" | grep -q "200" && ok "fetched $PATH_ → 200" || fail "fetch gen img: $HEAD"
+  CREDITS_AFTER=$(curl -s -H "Authorization: Bearer $TOKEN" "$BASE/api/v1/auth/me" \
+    | python3 -c "import json,sys;print(json.load(sys.stdin)['data']['upload_credits'])")
+  DELTA=$((CREDITS_BEFORE - CREDITS_AFTER))
+  [ "$DELTA" -gt 0 ] && ok "credit decremented by $DELTA ($CREDITS_BEFORE → $CREDITS_AFTER)" \
+                    || fail "credit NOT decremented ($CREDITS_BEFORE → $CREDITS_AFTER)"
+fi
+
+say "27. AI gen: disabled flag → 503 AI_DISABLED"
+# Disable feature flag
+docker compose exec -T mysql mysql -N -uimageurl -pimageurl_pwd imageurl \
+  -e "UPDATE configs SET config_value='false' WHERE config_key='ai_image.enabled'" 2>/dev/null
+DISABLED_RESP=$(curl -s -X POST "$BASE/api/v1/ai/generations" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"prompt":"x"}')
+DISABLED_CODE=$(echo "$DISABLED_RESP" | python3 -c "import json,sys;print((json.load(sys.stdin).get('error') or {}).get('code',''))" 2>/dev/null || echo "")
+[ "$DISABLED_CODE" = "AI_DISABLED" ] && ok "disabled flag → 503 AI_DISABLED" \
+                          || fail "expected AI_DISABLED got $DISABLED_RESP"
+# Status endpoint reflects disabled
+STATUS_RESP=$(curl -s "$BASE/api/v1/ai/status")
+STATUS_ENABLED=$(echo "$STATUS_RESP" | python3 -c "import json,sys;print(json.load(sys.stdin)['data']['enabled'])" 2>/dev/null)
+[ "$STATUS_ENABLED" = "False" ] && ok "GET /ai/status → enabled=false" \
+                          || fail "status expected False got $STATUS_ENABLED ($STATUS_RESP)"
+# Re-enable
+docker compose exec -T mysql mysql -N -uimageurl -pimageurl_pwd imageurl \
+  -e "UPDATE configs SET config_value='true' WHERE config_key='ai_image.enabled'" 2>/dev/null
+REENABLED=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/v1/ai/generations" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"prompt":"x"}')
+[ "$REENABLED" != "503" ] && ok "re-enabled → not 503 (got $REENABLED)" || fail "still disabled after re-enable"
+STATUS_RESP=$(curl -s "$BASE/api/v1/ai/status")
+STATUS_ENABLED=$(echo "$STATUS_RESP" | python3 -c "import json,sys;print(json.load(sys.stdin)['data']['enabled'])" 2>/dev/null)
+[ "$STATUS_ENABLED" = "True" ] && ok "GET /ai/status → enabled=true after re-enable" \
+                          || fail "status expected True got $STATUS_ENABLED"
+
 echo -e "\n\033[1;32mAll smoke checks passed.\033[0m"

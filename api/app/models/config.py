@@ -57,3 +57,13 @@ class Config(Base):
     KEY_SEPAY_WEBHOOK_API_KEY = "sepay.api_key"
     KEY_SEPAY_QR_TTL_MINUTES = "sepay.qr_ttl_minutes"
     KEY_SEPAY_STORE = "sepay.store_name"     # tên cửa hàng hiển thị trên VietQR (optional)
+
+    # ---- AI Image Generation ----
+    # Endpoint và credentials cho external AI image provider (router.auto-socials.com).
+    # Tất cả đọc qua bảng ``configs`` để đổi runtime không cần rebuild container.
+    KEY_AI_IMAGE_API_URL = "ai_image.api_url"
+    KEY_AI_IMAGE_API_KEY = "ai_image.api_key"
+    KEY_AI_IMAGE_DEFAULT_MODEL = "ai_image.default_model"
+    KEY_AI_IMAGE_CREDIT_COST = "ai_image.credit_cost"
+    KEY_AI_IMAGE_TIMEOUT_SECONDS = "ai_image.timeout_seconds"
+    KEY_AI_IMAGE_ENABLED = "ai_image.enabled"

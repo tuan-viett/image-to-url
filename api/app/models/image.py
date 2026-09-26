@@ -44,6 +44,7 @@ class Image(Base):
     SOURCE_WEB_UPLOAD = 2
     SOURCE_BASE64 = 3
     SOURCE_API = 4
+    SOURCE_AI_GENERATED = 5
 
     # Image quality constants (stored in `image_quality` column)
     QUALITY_OPTIMIZED = 0
@@ -82,7 +83,7 @@ class Image(Base):
     )
     source: Mapped[int] = mapped_column(
         SmallInteger, nullable=False,
-        comment="Nguồn upload. 1=anonymous_upload, 2=web_upload, 3=base64, 4=api.",
+        comment="Nguồn upload. 1=anonymous_upload, 2=web_upload, 3=base64, 4=api, 5=ai_generated.",
     )
     image_quality: Mapped[int] = mapped_column(
         SmallInteger, nullable=False,

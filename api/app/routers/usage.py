@@ -23,6 +23,7 @@ EVENT_LABELS = {
     UsageEvent.TYPE_DELETE: "deletes",
     UsageEvent.TYPE_FAILED_UPLOAD: "failed_uploads",
     UsageEvent.TYPE_IMAGE_EXPIRED: "image_expired",
+    UsageEvent.TYPE_AI_GENERATION: "ai_generations",
 }
 
 

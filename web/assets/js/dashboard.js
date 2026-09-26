@@ -4,10 +4,42 @@
     upload: "Turn images into public URLs.",
     overview: "Overview",
     images: "Images",
+    aigen: "AI Generate",
     keys: "API Keys",
     usage: "Usage",
     docs: "Documentation",
   };
+
+  // Feature flags (default enabled)
+  const FLAGS = { ai_gen: true };
+
+  async function bootstrapFeatureFlags() {
+    try {
+      const resp = await ImageURL.getAIStatus();
+      // Handle boolean true/false hoặc string "true"/"false" từ MySQL TEXT
+      const v = resp.data.enabled;
+      FLAGS.ai_gen = (v === true || v === "true" || v === 1 || v === "1");
+    } catch (_) {
+      // Leave defaults — UI still works if /ai/status unavailable
+    }
+    applyFeatureFlags();
+  }
+
+  function applyFeatureFlags() {
+    // Hide/show sidebar button + page for AI Generate
+    const btn = document.querySelector('.nav button[data-page="aigen"]');
+    const page = document.getElementById("aigen");
+    if (btn) btn.style.display = FLAGS.ai_gen ? "" : "none";
+    if (page) page.style.display = FLAGS.ai_gen ? "" : "none";
+    // Nếu hiện tại đang active tab aigen và vừa tắt → redirect về overview
+    if (!FLAGS.ai_gen && page) {
+      page.classList.remove("active");
+      const activeBtn = document.querySelector(".nav button.active");
+      if (activeBtn && activeBtn.dataset.page === "aigen") {
+        location.href = "/dashboard.html";
+      }
+    }
+  }
 
   function setupTabs() {
     const buttons = document.querySelectorAll(".nav button");
@@ -234,8 +266,12 @@
       const map = {};
       resp.data.counters.forEach((c) => { map[c.event_type] = c; });
       document.getElementById("uUploads").textContent = (map[1] && map[1].count) || 0;
+      document.getElementById("uAiGen").textContent = (map[6] && map[6].count) || 0;
       document.getElementById("uApi").textContent = (map[2] && map[2].count) || 0;
       document.getElementById("uFailed").textContent = (map[4] && map[4].count) || 0;
+      document.getElementById("uDeletes").textContent = (map[3] && map[3].count) || 0;
+      document.getElementById("uCredits").textContent =
+        resp.data.upload_credits_remaining != null ? resp.data.upload_credits_remaining : "—";
 
       const pays = await ImageURL.listPayments();
       const slot = document.getElementById("paymentsList");
@@ -275,6 +311,7 @@
     const user = await requireAuth();
     if (!user) return;
     await renderTopbar();
+    await bootstrapFeatureFlags();
     setupTabs();
     initUpload({ authed: true });
     document.getElementById("logout")?.addEventListener("click", () => ImageURL.logout());

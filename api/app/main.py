@@ -27,6 +27,7 @@ from app.routers import (
     api_keys,
     auth,
     images,
+    ai_gen,
     anonymous,
     payments,
     public_serve,
@@ -74,6 +75,7 @@ async def _app_error_handler(_request: Request, exc: AppError) -> JSONResponse:
 # Routers
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(images.router, prefix="/api/v1")
+app.include_router(ai_gen.router, prefix="/api/v1")
 app.include_router(anonymous.router, prefix="/api/v1")
 app.include_router(api_keys.router, prefix="/api/v1")
 app.include_router(usage_router.router, prefix="/api/v1")

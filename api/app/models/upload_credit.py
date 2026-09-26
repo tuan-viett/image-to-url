@@ -40,6 +40,7 @@ class UploadCreditTransaction(Base):
     TYPE_UPLOAD = 3
     TYPE_ADMIN_ADJUSTMENT = 4
     TYPE_REFUND = 5
+    TYPE_AI_GENERATION = 6
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
@@ -48,7 +49,7 @@ class UploadCreditTransaction(Base):
     )
     type: Mapped[int] = mapped_column(
         SmallInteger, nullable=False,
-        comment="Loại giao dịch. 1=PLAN_GRANT, 2=TOPUP, 3=UPLOAD, 4=ADMIN_ADJUSTMENT, 5=REFUND.",
+        comment="Loại giao dịch. 1=PLAN_GRANT, 2=TOPUP, 3=UPLOAD, 4=ADMIN_ADJUSTMENT, 5=REFUND, 6=AI_GENERATION.",
     )
     amount: Mapped[int] = mapped_column(
         Integer, nullable=False,

@@ -68,11 +68,16 @@ def validate_and_process(
     max_pixels: int,
     image_quality: int,
     max_bytes: int,
+    force_format: str | None = None,
 ) -> ProcessedImage:
     """Validate magic bytes, decode, run pixel-bomb + EXIF strip checks.
 
     Returns a fully-processed image ready for storage.
     Raises AppError with the appropriate code on any failure.
+
+    ``force_format``: nếu set (vd: ``"jpeg"``), ảnh sẽ được re-encode sang
+    đúng format đó bất kể magic bytes gốc. Dùng cho AI gen output để đảm bảo
+    file extension khớp với ``output_format`` client yêu cầu.
     """
     if len(raw) == 0:
         raise AppError(ErrorCode.INVALID_IMAGE, "Empty payload")
@@ -118,7 +123,18 @@ def validate_and_process(
 
     # Strip EXIF / metadata by re-saving. For original quality we still strip
     # sensitive GPS data — the security trade-off favors privacy.
-    out_bytes = _re_encode_stripped(pil, fmt_name)
+    # Nếu có ``force_format`` (AI gen), re-encode sang đúng format client yêu cầu
+    # để đảm bảo file extension khớp.
+    target_fmt = fmt_name
+    if force_format:
+        if force_format not in SUPPORTED_FORMATS:
+            raise AppError(
+                ErrorCode.VALIDATION_ERROR,
+                f"Unsupported force_format: {force_format}",
+                details={"allowed": list(SUPPORTED_FORMATS.keys())},
+            )
+        target_fmt = force_format
+    out_bytes = _re_encode_stripped(pil, target_fmt)
 
     # Re-validate size after re-encode (could shrink a lot for PNG).
     if len(out_bytes) > max_bytes:
@@ -129,7 +145,7 @@ def validate_and_process(
         )
 
     sha = hashlib.sha256(out_bytes).hexdigest()
-    mime, ext = SUPPORTED_FORMATS[fmt_name]
+    mime, ext = SUPPORTED_FORMATS[target_fmt]
     return ProcessedImage(
         data=out_bytes,
         mime_type=mime,

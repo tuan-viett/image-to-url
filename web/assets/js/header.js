@@ -24,21 +24,18 @@
       ? `<a href="/payment.html" class="h-chip h-plan"><b>${escapeHtml(me.plan_name)}</b> plan · nâng cấp</a>`
       : "";
 
-    // Credits chip: hiển thị "current / quota" + tooltip "used N · plan max M".
-    // quota = plan_initial_uploads của plan hiện tại (không tính top-up).
-    // Nếu user đã renewal nhiều lần → upload_credits > quota (do cộng dồn).
-    // Trường hợp đó vẫn hiển thị quota max; tooltip sẽ nói rõ.
+    // Credits chip: hiển thị số credit hiện có của user (upload_credits).
+    // quota = plan_initial_uploads của plan hiện tại (chỉ để hiển thị
+    // trong tooltip, không tính vào số chính).
+    // Nếu user đã renewal nhiều lần → upload_credits > quota (do cộng dồn
+    // bonus). Tooltip ghi rõ "X bonus từ renewal".
     let creditsBadge = "";
     if (me) {
       const current = Number(me.upload_credits) || 0;
       const quota = Number(me.plan_initial_uploads) || 0;
-      // "Used" chỉ có ý nghĩa khi current <= quota (chưa renewal).
-      // Khi renewal cộng dồn, current > quota → không hiển thị "used".
-      const used = Math.max(0, quota - current);
-      const usedNote = current > quota
-        ? `${current - quota} bonus từ renewal`
-        : `${used} đã dùng`;
-      creditsBadge = `<span class="h-chip h-credits" title="${current} còn lại · ${usedNote} · plan ${me.plan_name} cấp ${quota}/lần grant">${current} / ${quota} credits</span>`;
+      const bonus = Math.max(0, current - quota);
+      const bonusNote = bonus > 0 ? ` · +${bonus} bonus từ renewal` : "";
+      creditsBadge = `<span class="h-chip h-credits" title="${current} credits hiện có · plan ${me.plan_name} cấp ${quota}/lần grant${bonusNote}">${current} credits</span>`;
     }
 
     const emailPill = me
@@ -96,12 +93,10 @@
       const me = r.data;
       const current = Number(me.upload_credits) || 0;
       const quota = Number(me.plan_initial_uploads) || 0;
-      const used = Math.max(0, quota - current);
-      const usedNote = current > quota
-        ? `${current - quota} bonus từ renewal`
-        : `${used} đã dùng`;
-      chip.textContent = `${current} / ${quota} credits`;
-      chip.title = `${current} còn lại · ${usedNote} · plan ${me.plan_name} cấp ${quota}/lần grant`;
+      const bonus = Math.max(0, current - quota);
+      const bonusNote = bonus > 0 ? ` · +${bonus} bonus từ renewal` : "";
+      chip.textContent = `${current} credits`;
+      chip.title = `${current} credits hiện có · plan ${me.plan_name} cấp ${quota}/lần grant${bonusNote}`;
     } catch (_) { /* ignore */ }
   }
 
