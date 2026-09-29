@@ -156,6 +156,12 @@ window.ImageURL = (function () {
     return request("/api/v1/plans", { skipAuth: true });
   }
 
+  // Single source cho landing page: system limits (MB/hours) + active plans.
+  // Đổi env hoặc DB là tất cả client pick up — không sửa HTML.
+  async function getPublicConfig() {
+    return request("/api/v1/config/public", { skipAuth: true });
+  }
+
   async function upgradePlan(planId) {
     return request("/api/v1/payments/upgrade", {
       method: "POST",
@@ -199,7 +205,7 @@ window.ImageURL = (function () {
     login, register, me,
     uploadFile, uploadBase64, listImages, deleteImage,
     listApiKeys, createApiKey, revokeApiKey,
-    getUsage, listPlans, upgradePlan, topupCredits, listPayments,
+    getUsage, listPlans, getPublicConfig, upgradePlan, topupCredits, listPayments,
     getSepayConfig, getPaymentStatus,
     aiGenerate, getAIStatus,
   };

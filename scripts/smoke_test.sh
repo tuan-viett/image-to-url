@@ -70,6 +70,16 @@ PLANS=$(curl -s "$BASE/api/v1/plans")
 N=$(echo "$PLANS" | python3 -c "import json,sys;print(len(json.load(sys.stdin)['data']))")
 [ "$N" -ge 3 ] && ok "plans=$N" || fail "plans: $PLANS"
 
+say "8b. public config (landing page single source of truth)"
+PUB=$(curl -s "$BASE/api/v1/config/public")
+ANON_MB=$(echo "$PUB" | python3 -c "import json,sys;print(json.load(sys.stdin)['data']['limits']['anon_max_file_mb'])")
+AUTH_MB=$(echo "$PUB" | python3 -c "import json,sys;print(json.load(sys.stdin)['data']['limits']['auth_max_file_mb'])")
+ANON_HOURS=$(echo "$PUB" | python3 -c "import json,sys;print(json.load(sys.stdin)['data']['limits']['anon_retention_hours'])")
+PLAN_N=$(echo "$PUB" | python3 -c "import json,sys;print(len(json.load(sys.stdin)['data']['plans']))")
+[ -n "$ANON_MB" ] && [ -n "$AUTH_MB" ] && [ "$PLAN_N" -ge 3 ] \
+  && ok "public config: anon=${ANON_MB}MB auth=${AUTH_MB}MB hours=${ANON_HOURS} plans=$PLAN_N" \
+  || fail "public config: $PUB"
+
 say "9. create API key"
 KEY=$(curl -s -X POST "$BASE/api/v1/api-keys" \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \

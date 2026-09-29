@@ -93,3 +93,19 @@ class SepayConfigOut(BaseModel):
     account_name: str
     template: str
     qr_ttl_minutes: int
+
+
+class PublicLimitsOut(BaseModel):
+    """Giới hạn hệ thống — lấy từ Settings (env). Public để landing page render
+    placeholder không phải hardcode số MB / retention hours."""
+    anon_max_file_mb: int
+    auth_max_file_mb: int
+    anon_retention_hours: int
+
+
+class PublicConfigOut(BaseModel):
+    """Single source of truth cho landing page: giới hạn hệ thống + danh sách
+    plan active. Public, không cần auth. Đổi Settings (env) hoặc plans (DB) là
+    tất cả client tự pick up — không sửa HTML."""
+    limits: PublicLimitsOut
+    plans: list[PlanOut]

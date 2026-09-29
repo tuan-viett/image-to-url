@@ -5,12 +5,19 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.database import get_db
 from app.deps import get_current_user
 from app.models.user import User
 from app.models.usage_event import UsageEvent
 from app.schemas.common import OkEnvelope
-from app.schemas.usage import PlanOut, UsageCounter, UsageOut
+from app.schemas.usage import (
+    PlanOut,
+    PublicConfigOut,
+    PublicLimitsOut,
+    UsageCounter,
+    UsageOut,
+)
 from app.services.plan_service import list_plans
 
 
@@ -61,3 +68,20 @@ def usage(
 def plans_list(db: Session = Depends(get_db)) -> OkEnvelope[list[PlanOut]]:
     rows = list(list_plans(db))
     return OkEnvelope(data=[PlanOut.model_validate(p) for p in rows])
+
+
+@router.get("/config/public", response_model=OkEnvelope[PublicConfigOut])
+def public_config(db: Session = Depends(get_db)) -> OkEnvelope[PublicConfigOut]:
+    """Public config cho landing page: system limits + active plans.
+
+    Một nguồn dữ liệu duy nhất cho toàn bộ text marketing hiển thị giá /
+    quota / retention — tránh hardcode trong HTML.
+    """
+    settings = get_settings()
+    limits = PublicLimitsOut(
+        anon_max_file_mb=settings.anon_max_file_bytes // (1024 * 1024),
+        auth_max_file_mb=settings.auth_max_file_bytes // (1024 * 1024),
+        anon_retention_hours=settings.anon_retention_days * 24,
+    )
+    plans = [PlanOut.model_validate(p) for p in list_plans(db)]
+    return OkEnvelope(data=PublicConfigOut(limits=limits, plans=plans))
