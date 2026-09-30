@@ -326,15 +326,7 @@
             <span class="auth-badge">−5 credits</span>
           </header>
           <h3>Generate an image from a prompt (AI)</h3>
-          <p>Send a text prompt to the AI provider. Returns a public URL on success. Costs <b>5 credits</b> per request. Rate-limited to <b>10 requests / 10 min / IP</b>. Anonymous (no auth) is rejected with <code>401 UNAUTHORIZED</code>.</p>
-          <h4>Allowed fields</h4>
-          <p>Only these four fields are accepted. Anything else (e.g. <code>model</code>, <code>n</code>, <code>background</code>, <code>image_detail</code>) returns <code>422 VALIDATION_ERROR</code> — those are server-controlled and always read from the <code>configs</code> table.</p>
-          <ul>
-            <li><code>prompt</code> — <b>required</b>, 1–2000 chars.</li>
-            <li><code>size</code> — optional. One of <code>1024x1024</code>, <code>1024x1536</code>, <code>1536x1024</code>, <code>auto</code>.</li>
-            <li><code>quality</code> — optional. One of <code>low</code>, <code>medium</code>, <code>high</code>.</li>
-            <li><code>output_format</code> — optional, default <code>png</code>. One of <code>png</code>, <code>jpeg</code>, <code>webp</code>. The stored file <b>always</b> has the matching extension (<code>.png</code>, <code>.jpg</code>, <code>.webp</code>) — bytes are re-encoded to match.</li>
-          </ul>
+          <p>Send a text prompt to the AI provider. Returns a public URL on success.</p>
           <h4>cURL</h4>
           <pre class="code-block"><code data-curl="aiGen">curl -X POST http://localhost/api/v1/ai/generations \
   -H "Authorization: Bearer sk_live_xxxxxxxxx" \
@@ -359,18 +351,6 @@
     "credits_remaining": 95
   }
 }</code></pre>
-          <h4>Server-controlled (not accepted from client)</h4>
-          <ul>
-            <li><code>model</code> — default <code>ag/gemini-3.1-flash-image</code> (configurable via <code>ai_image.default_model</code>).</li>
-            <li><code>n</code> — fixed at <code>1</code>. One request = one image.</li>
-            <li><code>background</code> / <code>image_detail</code> — fixed to provider defaults.</li>
-          </ul>
-          <h4>Notes</h4>
-          <ul>
-            <li>On provider error / timeout / content-policy block, the credit is refunded automatically.</li>
-            <li>Generated images are stored with <code>images.source = 5 (ai_generated)</code> and counted in the <b>AI generations</b> tile of the Usage tab.</li>
-            <li>Endpoint runs on the same auth + storage pipeline as <code>POST /api/v1/images</code>.</li>
-          </ul>
         </article>
 
         <article class="api-card docs-errors">
